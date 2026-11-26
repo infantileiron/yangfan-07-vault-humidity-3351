@@ -1,0 +1,19 @@
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Noto+Sans+SC:wght@400;600;700&display=swap");
+:root {
+  color-scheme: light;
+  --font-display: "Cormorant Garamond";
+  --font-body: "Noto Sans SC";
+  --radius: 0;
+  --gutter: clamp(1.05rem, 3vw, 3.5rem);
+  --canvas: oklch(96% 0.018 156);
+  --paper: oklch(98% 0.009 156);
+  --side: oklch(92% 0.029 156);
+  --ink: oklch(25% 0.037 156);
+  --muted: oklch(43% 0.043 156);
+  --line: oklch(81% 0.04 156);
+  --accent: oklch(44% 0.095 156);
+  --accent-ink: oklch(37% 0.095 156);
+  --on-accent: oklch(98% 0.011 156);
+  --table-alt: oklch(96% 0.012 156);
+  --error: oklch(42% 0.15 25);
+}

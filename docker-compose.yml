@@ -1,0 +1,92 @@
+name: yangfan-07-vault-humidity
+x-app: &app
+  DATABASE_URL: postgresql+psycopg://studio:${DB_PASSWORD}@db:5432/workbench
+  REDIS_URL: redis://redis:6379/0
+  JWT_SECRET: ${JWT_SECRET:?Copy .env.example to .env and set JWT_SECRET}
+  ARTIFACTS_DIR: /artifacts
+services:
+  frontend:
+    container_name: ${COMPOSE_PROJECT_NAME:-yangfan-07-vault-humidity}-frontend
+    build: ./frontend
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-18326}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD-SHELL, "wget -qO /dev/null http://127.0.0.1/"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  backend:
+    container_name: ${COMPOSE_PROJECT_NAME:-yangfan-07-vault-humidity}-backend
+    build: ./backend
+    image: yangfan-07-vault-humidity-app:local
+    environment:
+      <<: *app
+      SEED_DEMO: ${SEED_DEMO:-true}
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-19326}:8000"
+    volumes:
+      - artifacts:/artifacts
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:8000/healthz', timeout=2)"]
+      interval: 3s
+      timeout: 3s
+      retries: 25
+  worker:
+    container_name: ${COMPOSE_PROJECT_NAME:-yangfan-07-vault-humidity}-worker
+    image: yangfan-07-vault-humidity-app:local
+    pull_policy: never
+    command: ["python", "-m", "src.worker"]
+    environment: *app
+    volumes:
+      - artifacts:/artifacts
+    depends_on:
+      backend:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "from pathlib import Path; from time import time; raise SystemExit(time() - Path('/tmp/worker-heartbeat').stat().st_mtime >= 90)"]
+      interval: 3s
+      timeout: 3s
+      retries: 25
+  db:
+    container_name: ${COMPOSE_PROJECT_NAME:-yangfan-07-vault-humidity}-db
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: workbench
+      POSTGRES_USER: studio
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD}
+    ports:
+      - "127.0.0.1:${DB_PORT:-17826}:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD, pg_isready, -h, 127.0.0.1, -U, studio, -d, workbench]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+  redis:
+    container_name: ${COMPOSE_PROJECT_NAME:-yangfan-07-vault-humidity}-redis
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+volumes:
+  db-data:
+  redis-data:
+  artifacts:
