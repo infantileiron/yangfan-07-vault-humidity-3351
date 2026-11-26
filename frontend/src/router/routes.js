@@ -1,4 +1,4 @@
-const pages = new Set(['datasets', 'runs', 'results', 'handoff']);
+const pages = new Set(['datasets', 'runs', 'results', 'handoff', 'calibrations']);
 
 export function route() {
   const [page, id] = location.hash.slice(1).split('/');

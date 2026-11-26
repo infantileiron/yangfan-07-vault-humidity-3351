@@ -2,8 +2,8 @@ from fastapi import Response
 
 from src.business.profile import PROFILE
 from src.config.settings import Session
-from src.schemas.resources import dataset_view, review_view, run_view
-from src.services import datasets, reviews, runs
+from src.schemas.resources import calibration_view, dataset_view, review_view, run_view
+from src.services import calibrations, datasets, reviews, runs
 from src.utils.csv_data import render_csv
 
 
@@ -27,3 +27,12 @@ def run_details(run_id):
         review = reviews.lookup(db, run_id)
         result["review"] = review_view(review) if review else None
         return result
+
+
+def calibration_details(calibration_id):
+    return calibrations.detail(calibration_id)
+
+
+def recheck_rooms():
+    with Session() as db:
+        return {"rooms": calibrations.pending_recheck_rooms(db)}

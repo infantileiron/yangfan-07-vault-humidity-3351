@@ -11,6 +11,10 @@ export const api = {
   submit: data => request('/runs', { method: 'POST', body: data }),
   review: (id, data) => request('/runs/' + id + '/review', { method: 'POST', body: data }),
   reviews: () => request('/reviews'),
+  calibrations: () => request('/calibrations'),
+  calibration: id => request('/calibrations/' + id),
+  createCalibration: data => request('/calibrations', { method: 'POST', body: data }),
+  recheckRooms: () => request('/recheck-rooms'),
   audit: () => request('/audit'),
   download: path => request(path, { download: true }),
 };

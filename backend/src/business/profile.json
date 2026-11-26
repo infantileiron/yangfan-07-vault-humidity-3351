@@ -10,11 +10,13 @@
   ],
   "upstream": "三班交接记录、库房内外相对湿度与当班开门时长",
   "downstream": "设施班长按预测队列分配驻点巡查人手，值班员现场复测并回填读数",
+  "calibration_rule": "换表期新旧两表并行同抄：同班只算一次，前段同抄估计旧表减新表偏差、末段留班独立核验；留不出核验班次或单班残差超过两个百分点的库房转人工复测。核验通过的库房把换表后新表读数平移到旧表尺度再计算湿度变化，并作废旧口径预测、安排重算。",
   "labels": {
     "datasets": "交班湿度簿",
     "runs": "班前湿度预测",
     "results": "下一班巡查顺序",
     "handoff": "库房巡查签交",
+    "calibrations": "换表校准",
     "input": "导入交班读数",
     "action": "预测下一班湿度"
   },
@@ -53,6 +55,8 @@
     {"key": "now_rh", "label": "当前湿度（%）"},
     {"key": "forecast_rh", "label": "下一班湿度（%）"},
     {"key": "threshold_gap", "label": "超阈值（百分点）"},
+    {"key": "calibrated", "label": "读数已校准"},
+    {"key": "manual_recheck", "label": "待人工复测"},
     {"key": "disposition", "label": "班前安排"}
   ],
   "chart": {"key": "forecast_rh", "label": "下一班相对湿度"},

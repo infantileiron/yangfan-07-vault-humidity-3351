@@ -12,6 +12,7 @@ from src.constants.workflow import Stage
 from src.models.base import new_id, utcnow
 from src.models.dataset import Dataset
 from src.models.run import Run
+from src.services import calibrations
 from src.services.audit import record
 from src.services.exports import result_keys
 from src.utils.csv_data import render_csv
@@ -43,7 +44,7 @@ def claim():
         run.started_at = utcnow()
         run.attempts += 1
         dataset = db.get(Dataset, run.dataset_id)
-        return run.id, run.lease, run.parameter, dataset.rows
+        return run.id, run.lease, run.parameter, dataset.rows, run.dataset_id
 
 
 def verify_result(result):
@@ -62,12 +63,14 @@ def verify_result(result):
 
 
 def execute(job):
-    run_id, lease, parameter, rows = job
+    run_id, lease, parameter, rows, dataset_id = job
     artifact = None
     result = None
     error = None
     try:
-        result = verify_result(analyze(rows, parameter))
+        with Session() as db:
+            room_calibrations = calibrations.effective_room_calibrations(db, dataset_id)
+        result = verify_result(analyze(rows, parameter, room_calibrations))
         artifact = f"{run_id}-{lease}.csv"
         path = ARTIFACTS / artifact
         temporary = path.with_suffix(".tmp")
@@ -82,9 +85,19 @@ def execute(job):
         result = None
     stage = Stage.FAILED.value if error else Stage.SUCCEEDED.value
     with Session.begin() as db:
-        change = db.execute(update(Run).where(Run.id == run_id, Run.lease == lease, Run.status == Stage.RUNNING.value).values(
-            status=stage, result=result, artifact=artifact if not error else None, error=error, finished_at=utcnow(),
-        ))
+        run = db.get(Run, run_id)
+        values = {
+            "status": stage, "result": result,
+            "artifact": artifact if not error else None, "error": error,
+            "finished_at": utcnow(),
+        }
+        if not error:
+            # 重算完成即采用最新校准口径，清除待重算标记并固化新快照。
+            values["calibration_stale"] = False
+            values["calibration_snapshot"] = calibrations.snapshot_calibrations(db, run.dataset_id)
+        change = db.execute(update(Run).where(
+            Run.id == run_id, Run.lease == lease, Run.status == Stage.RUNNING.value
+        ).values(**values))
         if change.rowcount:
             record(db, "worker", f"run_{stage}", run_id)
     if artifact and (error or not change.rowcount):

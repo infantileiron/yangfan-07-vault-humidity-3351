@@ -6,9 +6,10 @@ from sqlalchemy import select
 
 from src.business.profile import PROFILE
 from src.config.settings import Session, redis
+from src.constants.workflow import Stage
 from src.models.run import Run
 from src.schemas.resources import run_view
-from src.services import datasets
+from src.services import calibrations, datasets
 from src.services.audit import record
 
 WAKE_KEY = "workbench:wake"
@@ -33,7 +34,11 @@ def submit(body, actor):
         raise HTTPException(422, f"「{control['label']}」超出允许范围。")
     with Session.begin() as db:
         datasets.require(db, body.dataset_id)
-        run = Run(dataset_id=body.dataset_id, label=body.label, parameter=body.parameter, actor=actor)
+        snapshot = calibrations.snapshot_calibrations(db, body.dataset_id)
+        run = Run(
+            dataset_id=body.dataset_id, label=body.label, parameter=body.parameter,
+            actor=actor, calibration_snapshot=snapshot, calibration_stale=False,
+        )
         db.add(run)
         db.flush()
         record(db, actor, "run_queued", run.id)

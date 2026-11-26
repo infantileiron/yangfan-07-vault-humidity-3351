@@ -16,6 +16,9 @@ class Run(Base):
     actor: Mapped[str] = mapped_column(String(160))
     status: Mapped[str] = mapped_column(String(20), default=Stage.QUEUED.value, index=True)
     result: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    # 提交时生效的校准快照；用于判断该计算单是否被后续校准作废、需要重算。
+    calibration_snapshot: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    calibration_stale: Mapped[bool] = mapped_column(default=False, index=True)
     artifact: Mapped[str | None] = mapped_column(String(100))
     error: Mapped[str | None] = mapped_column(Text)
     lease: Mapped[str | None] = mapped_column(String(36))

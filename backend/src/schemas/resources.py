@@ -19,11 +19,24 @@ def run_view(run, include_result=False):
     item = {
         "id": run.id, "dataset_id": run.dataset_id, "label": run.label, "parameter": run.parameter,
         "status": run.status, "error": run.error, "actor": run.actor,
+        "calibration_stale": run.calibration_stale,
         "created_at": utc(run.created_at), "started_at": utc(run.started_at),
         "finished_at": utc(run.finished_at),
     }
     if include_result:
         item["result"] = run.result
+    return item
+
+
+def calibration_view(calibration, include_readings=False):
+    item = {
+        "id": calibration.id, "dataset_id": calibration.dataset_id,
+        "label": calibration.label, "actor": calibration.actor,
+        "note": calibration.note, "result": calibration.result,
+        "created_at": utc(calibration.created_at),
+    }
+    if include_readings:
+        item["readings"] = calibration.readings
     return item
 
 

@@ -44,3 +44,24 @@ def demo_rows() -> list[dict]:
                 0.18 * door + cycle + rng.gauss(0, 0.72)
             )
     return rows
+
+
+def demo_calibration(room: str, bias: float = 2.0, shifts: int = 4, manual: bool = False) -> list[dict]:
+    """构造一段换表同抄演示数据：新表系统性偏低 ``bias`` 个百分点。
+
+    时间取演示序列最后 ``shifts`` 个班次端点；``manual=True`` 时只给一班，
+    因留不出核验班次而触发人工复测分支。
+    """
+    count = 1 if manual else shifts
+    last = datetime(2026, 11, 12, 0, 0) + timedelta(hours=8 * (41 - count))
+    entries = []
+    for phase in range(count):
+        stamp = last + timedelta(hours=8 * phase)
+        old_value = round(56 + 0.4 * phase, 2)
+        entries.append({
+            "room": room,
+            "shift_at": stamp.strftime("%Y-%m-%d %H:%M"),
+            "old_rh": old_value,
+            "new_rh": round(old_value - bias, 2),
+        })
+    return entries

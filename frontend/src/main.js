@@ -3,6 +3,7 @@ import { empty } from './components/common/heading.js';
 import { roles } from './constants/enums.js';
 import { notice } from './hooks/forms.js';
 import { datasetsPage } from './pages/datasets.js';
+import { calibrationsPage } from './pages/calibrations.js';
 import { handoffPage } from './pages/handoff.js';
 import { loginPage } from './pages/login.js';
 import { resultsPage } from './pages/results.js';
@@ -15,7 +16,7 @@ import { escapeHtml as e } from './utils/format.js';
 
 const app = document.querySelector('#app');
 document.body.dataset.layout = identity.theme.layout;
-const pages = { datasets: datasetsPage, runs: runsPage, results: resultsPage, handoff: handoffPage };
+const pages = { datasets: datasetsPage, runs: runsPage, results: resultsPage, handoff: handoffPage, calibrations: calibrationsPage };
 let renderId = 0;
 let timer;
 
